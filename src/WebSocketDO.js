@@ -20,43 +20,39 @@ module.exports = class WebSocketDO {
     }
 
     const pair = new WebSocketPair();
-
     const webSocket = pair[1];
-
     webSocket.accept();
-
-    webSocket.send('Welcome');
+    webSocket.send(JSON.stringify({ welcome: true }));
 
     const session = { webSocket };
 
     // PROBLEM: this line blows up because sessions is undefined...
-    this.sessions.push(session);
+    //this.sessions.push(session);
 
     webSocket.addEventListener('message', async msg => {
-      /*  if (session.quit) {
-        // Whoops, when trying to send to this WebSocket in the past, it threw an exception and
-        // we marked it broken. But somehow we got another message? I guess try sending a
-        // close(), which might throw, in which case we'll try to send an error, which will also
-        // throw, and whatever, at least we won't accept the message. (This probably can't
-        // actually happen. This is defensive coding.)
-        webSocket.close(1011, 'WebSocket broken');
-      } */
 
+      try {
+        const data = JSON.parse(msg.data);
+
+        if (!session.clientId && data.clientId) {
+          session.clientId = data.clientId;
+  
+          // send a little welcome
+          webSocket.send(
+            JSON.stringify({
+              ready: true,
+            })
+          );
+        } else {
+          // it's a normal message - echo for now
+          webSocket.send(JSON.stringify({ data: data}));
+        } 
+      }
+      catch(err) {
+        webSocket.send(`Error ${err.stack} \r\n${err.message} \r\n${err.description}`);
+      }
       // if we have no clientId and receive one, assign it to the session
       // clients changing id will be ignored
-      if (!session.clientId && data.clientId) {
-        session.clientId === data.clientId;
-
-        // send a little welcome
-        webSocket.send(
-          JSON.stringify({
-            ready: true,
-          })
-        );
-      } else {
-        // it's a normal message - echo for now
-        webSocket.send('Hi!');
-      }
     });
 
     const closeOrErrorHandler = evt => {
