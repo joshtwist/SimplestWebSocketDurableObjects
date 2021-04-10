@@ -6,7 +6,7 @@ module.exports = class WebSocketDO {
     this.sessions = [];
   }
 
-  async fetch(request) {
+  async fetch (request) {
     const path = new URL(request.url).pathname;
 
     if (!path == '/websocket' || request.headers.get('Upgrade') != 'websocket') {
@@ -29,9 +29,8 @@ module.exports = class WebSocketDO {
 
     const session = { webSocket };
 
-    //webSocket.send(JSON.stringify({ state: this.state, env: this.env, sessions: this.sessions }));
-
-    //this.sessions.push(session);
+    // PROBLEM: this line blows up because sessions is undefined...
+    this.sessions.push(session);
 
     webSocket.addEventListener('message', async msg => {
       /*  if (session.quit) {
@@ -43,9 +42,6 @@ module.exports = class WebSocketDO {
         webSocket.close(1011, 'WebSocket broken');
       } */
 
-      // Assume JSON
-      const data = JSON.parse(msg.data);
-
       // if we have no clientId and receive one, assign it to the session
       // clients changing id will be ignored
       if (!session.clientId && data.clientId) {
@@ -54,10 +50,12 @@ module.exports = class WebSocketDO {
         // send a little welcome
         webSocket.send(
           JSON.stringify({
-            welcome: true,
             ready: true,
           })
         );
+      } else {
+        // it's a normal message - echo for now
+        webSocket.send('Hi!');
       }
     });
 
@@ -68,7 +66,10 @@ module.exports = class WebSocketDO {
 
     webSocket.addEventListener('close', closeOrErrorHandler);
     webSocket.addEventListener('error', closeOrErrorHandler);
-  }
+
+    // Don't forget to return the other pair
+    return new Response(null, { status: 101, webSocket: pair[0] });
+  };
 
   broadcast(message, excludeClientId) {
     // Assume JSON
