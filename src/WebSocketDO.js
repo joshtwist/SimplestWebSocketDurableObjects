@@ -1,5 +1,5 @@
 module.exports = class WebSocketDO {
-  contructor(state, env) {
+  constructor(state, env) {
     this.state = state;
     this.env = env;
 
@@ -22,12 +22,10 @@ module.exports = class WebSocketDO {
     const pair = new WebSocketPair();
     const webSocket = pair[1];
     webSocket.accept();
-    webSocket.send(JSON.stringify({ welcome: true }));
-
+    
     const session = { webSocket };
 
-    // PROBLEM: this line blows up because sessions is undefined...
-    //this.sessions.push(session);
+    this.sessions.push(session);
 
     webSocket.addEventListener('message', async msg => {
 
@@ -45,7 +43,7 @@ module.exports = class WebSocketDO {
           );
         } else {
           // it's a normal message - echo for now
-          webSocket.send(JSON.stringify({ data: data}));
+          this.broadcast(JSON.stringify(data));
         } 
       }
       catch(err) {
@@ -80,7 +78,7 @@ module.exports = class WebSocketDO {
       }
 
       try {
-        session.webSocket.send(JSON.stringify(message));
+        session.webSocket.send(message);
         return true;
       } catch (error) {
         session.quit = true;
