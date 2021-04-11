@@ -4,6 +4,8 @@ module.exports = class WebSocketDO {
   constructor(state, env) {
     this.state = state;
     this.env = env;
+    // The socket helper maintains state so it's important it is 
+    // held at the scope of the durable object (and not the request).
     this.wsh = new WebSocketHelper();
 
     this.wsh.onMessage((msg, session) => {
