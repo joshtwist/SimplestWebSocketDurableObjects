@@ -28,8 +28,6 @@ exports.HTML = `<html>
 
       ws.addEventListener("open", event => {
         currentWebSocket = ws;
-
-        ws.send(JSON.stringify({clientId}));
       });
 
       ws.addEventListener("message", event => {
@@ -47,7 +45,7 @@ exports.HTML = `<html>
       });
 
       ws.addEventListener("error", event => {
-        console.log("WebSocket error, reconnecting:", event);
+        console.log("WebSocket  error, reconnecting:", event);
         rejoin();
       });
 
@@ -68,7 +66,7 @@ exports.HTML = `<html>
 
     sendButton.addEventListener("click", event => {
       const text = textInput.value;
-      const data = { text };
+      const data = { text, clientId };
       currentWebSocket.send(JSON.stringify(data));
       textInput.value = "";
     });
